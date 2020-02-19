@@ -1,0 +1,33 @@
+aplikasi ini dibangun dengan java 11,tomcat apache-tomcat-9.0.30,PostgreSQL 9.3,maven,spring boot 
+
+nama db : tnis_cuti
+username :tnis
+pass :tnis
+
+backup
+pg_dump.exe -i -h localhost -p 5432 -U tnis tnis_cuti > d:\tnis_cuti.sql
+
+restore
+psql -d tnis -h localhost  -p 5432 -U tnis -f D:\tnis_cuti.sql
+
+
+===========================================================================
+1. aplikasi ini nantinya ada 5 Module utama
+- Module ( nama module yang terdapat di sistem ini)
+- Assignment  (Buat menentukan dan mengarahkan premision user akan mendapatkan Module apa saja / module management)
+- Profile Group (assigment yang sudah di tentukan premision nya akan di daftarkan di profile group tujuan nya agar user nantinya ketika pertama di buat dia langsung ke group dan automatis akan mendapatkan Module yang sudah didaftarkan permision nya oleh assignment) 
+- Profile (di buatan oleh admin dan di daftarkan ke profile group. dan automatis akan mendapatkan menu sesuai permesiion yang di atur di assignment) 
+- Cuti ( Input Cuti dilakukan oleh user dan akan di setujui atau di tolak oleh admin)
+2. terdapat 2 login admin(pimpinan) dan user(karyawan)
+- admin diberikan keleluasan untuk create update insert deleted user.
+- admin dibekali semua menu dan diberi keleluasaan di setiap menu
+- user hanya bisa login dan mengajukan cuti dan hasil cuti menunggu konfirmasi admin.
+- user hanya terdapat 2 menu yaitu Cuti dan Profile
+- di menu Cuti user hanya bisa mengajukan cuti dan nunggu persetujuan dari admin
+- di menu profile user hanya bisa edit tidak bisa melihat keseluruhan list user 
+
+=============================================================================
+PENGEMBANGAN
+1. sejauh ini dibuatkan data nya masih dari via DB . kedepan nya diharapkan bisa dynamic dilakukan langsung dari aplikasi . dan dilakukan oleh consultan / analis langsung.
+2. selebihnya akan selalu terus dikembangkan aplikasi ini agar sesuai dengan standar TNIS (Teknologi Nasional Indonesia) ....
+

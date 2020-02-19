@@ -1,3 +1,49 @@
+CREATE SEQUENCE tblassignment_assignmentid_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 4
+  CACHE 1;
+ALTER TABLE tblassignment_assignmentid_seq
+  OWNER TO tnis;
+
+CREATE SEQUENCE tblcuti_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 1
+  CACHE 1;
+ALTER TABLE tblcuti_seq
+  OWNER TO tnis;
+
+CREATE SEQUENCE tblgroup_groupid_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 4
+  CACHE 1;
+ALTER TABLE tblgroup_groupid_seq
+  OWNER TO tnis;
+
+CREATE SEQUENCE tblmodule_moduleid_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 10
+  CACHE 1;
+ALTER TABLE tblmodule_moduleid_seq
+  OWNER TO tnis;
+
+
+CREATE SEQUENCE tblpermission_permissionid_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 11
+  CACHE 1;
+ALTER TABLE tblpermission_permissionid_seq
+  OWNER TO tnis;
+
 CREATE SEQUENCE tblprofile_seq
   INCREMENT 1
   MINVALUE 1
@@ -8,7 +54,92 @@ ALTER TABLE tblprofile_seq
   OWNER TO tnis;
 
 
-CREATE TABLE tblprofile
+CREATE TABLE tblmodule
+(
+  modulename character varying(255) DEFAULT NULL::character varying,
+  moduleid bigint NOT NULL DEFAULT nextval('tblmodule_moduleid_seq'::regclass),
+  modulelink character varying(255) DEFAULT NULL::character varying,
+  deleted bigint DEFAULT 0,
+  CONSTRAINT tbl_module_pkey PRIMARY KEY (moduleid)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE tblmodule
+  OWNER TO tnis;
+
+
+CREATE TABLE tblassignment
+(
+  assignmentid bigint NOT NULL DEFAULT nextval('tblassignment_assignmentid_seq'::regclass),
+  name character varying(255) DEFAULT NULL::character varying,
+  deleted bigint DEFAULT 0,
+  CONSTRAINT tblassignment_pkey PRIMARY KEY (assignmentid)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE tblassignment
+  OWNER TO tnis;
+COMMENT ON TABLE tblassignment
+  IS 'stores company name';
+
+
+CREATE TABLE cuti
+(
+  cutiid bigint NOT NULL DEFAULT nextval('tblcuti_seq'::regclass),
+  keperluan character varying(255) DEFAULT NULL::character varying,
+  datefrom character varying(255) DEFAULT NULL::character varying,
+  dateto character varying(255) DEFAULT NULL::character varying,
+  description text,
+  deleted bigint DEFAULT 0,
+  CONSTRAINT tblcuti_pkey PRIMARY KEY (cutiid)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE cuti
+  OWNER TO tnis;
+
+CREATE TABLE tblgroup
+(
+  groupid bigint NOT NULL DEFAULT nextval('tblgroup_groupid_seq'::regclass),
+  name character varying(255) DEFAULT NULL::character varying,
+  assignmentid bigint,
+  deleted bigint DEFAULT 0,
+  CONSTRAINT tblgroup_pkey PRIMARY KEY (groupid),
+  CONSTRAINT tblassigmentid FOREIGN KEY (assignmentid)
+      REFERENCES tblassignment (assignmentid) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE tblgroup
+  OWNER TO tnis;
+COMMENT ON TABLE tblgroup
+  IS 'stores user group';
+
+
+CREATE TABLE tblpermissions
+(
+  permissionid bigint NOT NULL DEFAULT nextval('tblpermission_permissionid_seq'::regclass),
+  assignmentid bigint,
+  moduleid bigint,
+  pread boolean DEFAULT false,
+  CONSTRAINT tblpermissions_pkey PRIMARY KEY (permissionid),
+  CONSTRAINT tblpermission_fk_assignment FOREIGN KEY (assignmentid)
+      REFERENCES tblassignment (assignmentid) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE tblpermissions
+  OWNER TO tnis;
+
+
+CREATE TABLE profile
 (
   userid bigint NOT NULL DEFAULT nextval('tblprofile_seq'::regclass),
   groupid bigint,
@@ -25,174 +156,8 @@ CREATE TABLE tblprofile
 WITH (
   OIDS=FALSE
 );
-ALTER TABLE tblprofile
+ALTER TABLE profile
   OWNER TO tnis;
-
-
-
-CREATE SEQUENCE tblcuti_seq
-  INCREMENT 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  START 1
-  CACHE 1;
-ALTER TABLE tblcuti_seq
-  OWNER TO tnis;
-
-  CREATE TABLE tblcuti
-(
-  cutiid bigint NOT NULL DEFAULT nextval('tblcuti_seq'::regclass),
-  keperluan character varying(255) DEFAULT NULL::character varying,
-  datefrom character varying(255) DEFAULT NULL::character varying,
-  dateto character varying(255) DEFAULT NULL::character varying,
-  description text DEFAULT NULL::text,
-  deleted bigint DEFAULT 0,
-  PRIMARY KEY (cutiid)
-)
-WITH (
-  OIDS=FALSE
-);
-ALTER TABLE tblcuti
-  OWNER TO tnis;
-
-
-
-
-CREATE SEQUENCE tblmodule_moduleid_seq
-  INCREMENT 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  START 1
-  CACHE 1;
-ALTER TABLE tblmodule_moduleid_seq
-  OWNER TO dbl;
-
-CREATE TABLE tbl_module
-(
-  modulename character varying(255) DEFAULT NULL::character varying,
-  moduleid bigint NOT NULL DEFAULT nextval('tblmodule_moduleid_seq'::regclass),
-  modulelink character varying(255) DEFAULT NULL::character varying,
-  deleted bigint DEFAULT 0,
-  PRIMARY KEY (moduleid)
-)
-WITH (
-  OIDS=FALSE
-);
-ALTER TABLE tbl_module
-  OWNER TO tnis;
-
-
-
-CREATE SEQUENCE tblassignment_assignmentid_seq
-  INCREMENT 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  START 1
-  CACHE 1;
-ALTER TABLE tblassignment_assignmentid_seq
-  OWNER TO tnis;
-
-
-CREATE TABLE tblassignment
-(
-  assignmentid bigint NOT NULL DEFAULT nextval('tblassignment_assignmentid_seq'::regclass),
-  name character varying(255) DEFAULT NULL::character varying,
-  deleted bigint DEFAULT 0,
-  PRIMARY KEY (assignmentid)
-)
-WITH (
-  OIDS=FALSE
-);
-ALTER TABLE tblassignment
-  OWNER TO tnis;
-COMMENT ON TABLE tblassignment
-  IS 'stores company name';
-
-
-CREATE SEQUENCE tblgroup_groupid_seq
-  INCREMENT 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  START 1
-  CACHE 1;
-ALTER TABLE tblgroup_groupid_seq
-  OWNER TO tnis;
-
-CREATE TABLE tblgroup
-(
-  groupid bigint NOT NULL DEFAULT nextval('tblgroup_groupid_seq'::regclass),
-  name character varying(255) DEFAULT NULL::character varying,
-  assignmentid bigint,
-  deleted bigint DEFAULT 0,
-  PRIMARY KEY (groupid),
-  CONSTRAINT tblassigmentid FOREIGN KEY (assignmentid)
-      REFERENCES tblassignment (assignmentid) MATCH SIMPLE
-      ON UPDATE CASCADE ON DELETE CASCADE
-)
-WITH (
-  OIDS=FALSE
-);
-ALTER TABLE tblgroup
-  OWNER TO tnis;
-COMMENT ON TABLE tblgroup
-  IS 'stores user group';
-
-
-CREATE SEQUENCE tblpermission_permissionid_seq
-  INCREMENT 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  START 1
-  CACHE 1;
-ALTER TABLE tblpermission_permissionid_seq
-  OWNER TO tnis;
-
-
-
-CREATE TABLE tblpermissions
-(
-  permissionid bigint NOT NULL DEFAULT nextval('tblpermission_permissionid_seq'::regclass),
-  userid bigint,
-  assignmentid bigint,
-  moduleid bigint,
-  pread boolean DEFAULT false,
-  PRIMARY KEY (permissionid),
-  CONSTRAINT tblpermission_fk_assignment FOREIGN KEY (assignmentid)
-      REFERENCES tblassignment (assignmentid) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT tblpermission_fk_user FOREIGN KEY (userid)
-      REFERENCES tblprofile (userid) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION
-)
-WITH (
-  OIDS=FALSE
-);
-ALTER TABLE tblpermissions
-  OWNER TO tnis;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
