@@ -24,5 +24,7 @@ public class cuti {
     public String datefrom;
     public String dateto;
     public String description;
+    public String status ;
+    public String cutino ;
     public cuti(){}
 }
