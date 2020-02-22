@@ -34,6 +34,7 @@ and open the template in the editor.
                                 padding: 0px;
                     }
                 </style>
+                
   </head>
   <body class="h-100">
     <div class="container-fluid">
@@ -84,7 +85,7 @@ and open the template in the editor.
                                 <section class="dhx_sample-container" style="    margin-top: 0px;">
                                      <div class="form-row">
                                         <div class="form-group col-md-4">
-                                          <input type="text" class="form-control" id="code" placeholder="Search By Name" value=""> 
+                                          <input type="text" class="form-control" id="code" name="code" placeholder="Search By Name" value=""> 
                                         </div>                                                        
                                       </div>
                                         <div id="gridbox_d" width="99%" height="380px" style="background-color:white;overflow:hidden"></div>                                                       
@@ -114,6 +115,19 @@ and open the template in the editor.
                                                           <input type="password" class="form-control" th:value="${command.password}" name="password" placeholder="Password"> 
                                                         </div>
                                                       </div>
+                                                      <div class="form-row">
+                                                                 <div class="form-group col-md-3"></div>
+                                                                 <div class="form-group col-md-3"></div>
+                                                                 <div class="form-group col-md-3"></div>
+                                                                 <div class="form-group col-md-3">
+                                                                     <label for="feFirstName">Profile Group</label>
+                                                                     <select class="form-control is-invalid" name="groupid" >
+                                                                         <option th:each="group : ${listallprofilegroup}" th:value="${group.groupid}" th:text="${group.name}" th:selected="${group.groupid}==3"></option>
+                                                                        </select>
+                                                                </div>
+                                                                <div class="form-group col-md-3"></div>
+                                                               
+                                                            </div>
                                                      
                                                       <button type="submit" class="btn btn-accent">Save</button>
                                                     </form>
@@ -142,18 +156,59 @@ and open the template in the editor.
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sharrre/2.0.1/jquery.sharrre.min.js"></script>
  
         
-      <script type="text/javascript">    
+      <script th:inline="javascript">    
+          var datavalidasi = [[${validasiedit}]];
+          if(datavalidasi == "edit"){
+               var elementListHead = document.getElementById("nav-home-tab"); 
+               var namehead, arrhead;
+                    namehead = "nav-item nav-link";
+                    arrhead = elementListHead.className.split(" ");
+                    if (arrhead.indexOf(namehead) == -1) {
+                      elementListHead.className = " " + namehead;
+                    }
+              var elementList = document.getElementById("nav-list");    
+               var name, arr;
+                    name = "tab-pane fade";
+                    arr = elementList.className.split(" ");
+                    if (arr.indexOf(name) == -1) {
+                      elementList.className = " " + name;
+                    }
+                    
+                    
+                    
+               var elementNewHead = document.getElementById("nav-profile-tab");
+               var namehead2, arrhead2;
+                    namehead2 = "nav-item nav-link active";
+                    arrhead2 = elementNewHead.className.split(" ");
+                    if (arrhead2.indexOf(namehead2) == -1) {
+                      elementNewHead.className = " " + namehead2;
+                    }      
+              var elementNew = document.getElementById("nav-new");
+                     var name2, arr2;
+                     name2 = "tab-pane fade show active";
+                    arr2 = elementNew.className.split(" ");
+                    if (arr2.indexOf(name2) == -1) {
+                      elementNew.className = " " + name2;
+                    }
+          }
           
+            var list = [[${listall}]];
+             var prices=[];
+                    for (i = 0; i < list.length; i++) {
+//                      prices.push(["<a class='nav-link active' href='/karyawan/profil'> <i class='material-icons'>edit</i><span></span></a>",list[i].name]);
+                        prices.push([list[i].profileno,list[i].name,list[i].namegroupid]);
+                    
+                     }
         mygrid_d = new dhtmlXGridObject('gridbox_d');
         mygrid_d.setImagePath("codebase/imgs/");
-        mygrid_d.setHeader("Action,Name");
-        mygrid_d.setColAlign("center,center");
-        mygrid_d.setInitWidths("100,300");
-        mygrid_d.setColTypes("ro,ro");
-        mygrid_d.setColSorting("str,str");
+        mygrid_d.setHeader("Profile No,Name Profile,Name Profile Group");
+        mygrid_d.setColAlign("center,center,center");
+        mygrid_d.setInitWidths("100,300,300");
+        mygrid_d.setColTypes("ro,ro,ro");
+        mygrid_d.setColSorting("str,str,str");
         mygrid_d.init();
-     //   mygrid_d.parse(data,"jsarray");
-         mygrid_d.makeFilter("code",1);
+        mygrid_d.parse(prices,"jsarray");
+         mygrid_d.makeFilter("code",0);
         
                 </script>
     

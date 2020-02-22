@@ -22,6 +22,8 @@ public class tblgroup {
     public String schema; 
     public String name; 
     public Long assignmentid; 
+    
+    public String nameasiigment;
 
     public tblgroup() {    }    
 }

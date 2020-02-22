@@ -8,7 +8,6 @@ package com.interview.teknologi.indonesia.model;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-
 /**
  *
  * @author arzanka
@@ -19,12 +18,14 @@ import lombok.Setter;
 public class profile {
     public Long userid;
     public Long deleted;
-    public String schema;    
+    public String schema;
+    public String profileno;
     public Long groupid;
     public String tnisvalidasi;    
     public String name; 
     public String password;
-    
+    public String valuedata;
+    public String namegroupid;
 
     public profile() {}
 

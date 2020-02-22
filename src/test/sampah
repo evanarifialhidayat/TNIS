@@ -1,0 +1,13 @@
+
+<table>
+    <thead>
+        <tr>
+            <th> Title </th>
+        </tr>
+    </thead>
+    <tbody>
+         <tr th:each="assigment : ${listall}">
+            <td th:text="${assigment.name}">name</td>
+        </tr>
+    </tbody>
+</table>

@@ -1,8 +1,17 @@
+CREATE SEQUENCE standar_tnis_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 1
+  CACHE 1;
+ALTER TABLE standar_tnis_seq
+  OWNER TO tnis;
+
 CREATE SEQUENCE tblassignment_assignmentid_seq
   INCREMENT 1
   MINVALUE 1
   MAXVALUE 9223372036854775807
-  START 4
+  START 1
   CACHE 1;
 ALTER TABLE tblassignment_assignmentid_seq
   OWNER TO tnis;
@@ -20,7 +29,7 @@ CREATE SEQUENCE tblgroup_groupid_seq
   INCREMENT 1
   MINVALUE 1
   MAXVALUE 9223372036854775807
-  START 4
+  START 1
   CACHE 1;
 ALTER TABLE tblgroup_groupid_seq
   OWNER TO tnis;
@@ -29,11 +38,10 @@ CREATE SEQUENCE tblmodule_moduleid_seq
   INCREMENT 1
   MINVALUE 1
   MAXVALUE 9223372036854775807
-  START 10
+  START 1
   CACHE 1;
 ALTER TABLE tblmodule_moduleid_seq
   OWNER TO tnis;
-
 
 CREATE SEQUENCE tblpermission_permissionid_seq
   INCREMENT 1
@@ -43,6 +51,7 @@ CREATE SEQUENCE tblpermission_permissionid_seq
   CACHE 1;
 ALTER TABLE tblpermission_permissionid_seq
   OWNER TO tnis;
+
 
 CREATE SEQUENCE tblprofile_seq
   INCREMENT 1
@@ -54,13 +63,16 @@ ALTER TABLE tblprofile_seq
   OWNER TO tnis;
 
 
+
+
+
 CREATE TABLE tblmodule
 (
   modulename character varying(255) DEFAULT NULL::character varying,
   moduleid bigint NOT NULL DEFAULT nextval('tblmodule_moduleid_seq'::regclass),
   modulelink character varying(255) DEFAULT NULL::character varying,
   deleted bigint DEFAULT 0,
-  CONSTRAINT tbl_module_pkey PRIMARY KEY (moduleid)
+ PRIMARY KEY (moduleid)
 )
 WITH (
   OIDS=FALSE
@@ -87,13 +99,15 @@ COMMENT ON TABLE tblassignment
 
 CREATE TABLE cuti
 (
-  cutiid bigint NOT NULL DEFAULT nextval('tblcuti_seq'::regclass),
+  cutiid bigint NOT NULL,
   keperluan character varying(255) DEFAULT NULL::character varying,
   datefrom character varying(255) DEFAULT NULL::character varying,
   dateto character varying(255) DEFAULT NULL::character varying,
   description text,
   deleted bigint DEFAULT 0,
-  CONSTRAINT tblcuti_pkey PRIMARY KEY (cutiid)
+  status character varying(255),
+  cutino character varying(255) DEFAULT nextval('tblcuti_seq'::regclass),
+  PRIMARY KEY (cutiid)
 )
 WITH (
   OIDS=FALSE
@@ -101,14 +115,17 @@ WITH (
 ALTER TABLE cuti
   OWNER TO tnis;
 
+
+
+
 CREATE TABLE tblgroup
 (
   groupid bigint NOT NULL DEFAULT nextval('tblgroup_groupid_seq'::regclass),
   name character varying(255) DEFAULT NULL::character varying,
   assignmentid bigint,
   deleted bigint DEFAULT 0,
-  CONSTRAINT tblgroup_pkey PRIMARY KEY (groupid),
-  CONSTRAINT tblassigmentid FOREIGN KEY (assignmentid)
+ PRIMARY KEY (groupid),
+  FOREIGN KEY (assignmentid)
       REFERENCES tblassignment (assignmentid) MATCH SIMPLE
       ON UPDATE CASCADE ON DELETE CASCADE
 )
@@ -121,14 +138,15 @@ COMMENT ON TABLE tblgroup
   IS 'stores user group';
 
 
+
 CREATE TABLE tblpermissions
 (
   permissionid bigint NOT NULL DEFAULT nextval('tblpermission_permissionid_seq'::regclass),
   assignmentid bigint,
   moduleid bigint,
   pread boolean DEFAULT false,
-  CONSTRAINT tblpermissions_pkey PRIMARY KEY (permissionid),
-  CONSTRAINT tblpermission_fk_assignment FOREIGN KEY (assignmentid)
+  PRIMARY KEY (permissionid),
+ FOREIGN KEY (assignmentid)
       REFERENCES tblassignment (assignmentid) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE NO ACTION
 )
@@ -137,6 +155,7 @@ WITH (
 );
 ALTER TABLE tblpermissions
   OWNER TO tnis;
+
 
 
 CREATE TABLE profile
@@ -148,8 +167,9 @@ CREATE TABLE profile
   tnisvalidasi bigint DEFAULT 0,
   schema character varying(255),
   deleted bigint DEFAULT 0,
-  CONSTRAINT tbluser_pk PRIMARY KEY (userid),
-  CONSTRAINT tbluser_fk FOREIGN KEY (groupid)
+  profileno character varying NOT NULL DEFAULT nextval('tblprofile_seq'::regclass),
+  PRIMARY KEY (userid),
+  FOREIGN KEY (groupid)
       REFERENCES tblgroup (groupid) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE NO ACTION
 )
@@ -158,6 +178,7 @@ WITH (
 );
 ALTER TABLE profile
   OWNER TO tnis;
+
 
 
 
@@ -196,108 +217,6 @@ INSERT INTO tblpermissions(assignmentid, moduleid,pread)
 VALUES ((select assignmentid from tblassignment where name = 'Karyawan' limit 1), (select moduleid from tbl_module where modulename = 'Module' limit 1),false);
 INSERT INTO tblpermissions(assignmentid, moduleid,pread)
 VALUES ((select assignmentid from tblassignment where name = 'Karyawan' limit 1), (select moduleid from tbl_module where modulename = 'Group Profile' limit 1),false);
-
-
-CREATE SEQUENCE standar_tnis_seq
-  INCREMENT 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  START 1
-  CACHE 1;
-ALTER TABLE standar_tnis_seq
-  OWNER TO dbl;
-
-
-
-CREATE OR REPLACE FUNCTION f_standar_tns_seq(dataparam character varying)
-  RETURNS character AS
-$BODY$
-declare
-validasidata 	  character varying;
-validasidatatime 	  character varying;
-r record;
-BEGIN
-		
-		for r in	
-				select 
-				(dataparam || to_char(now()::date,'yy') || to_char(now()::date,'mm') || to_char(now()::date,'dd') || last_value) as paramno					
-				from dbl1.standar_dbl_seq
-		loop
-				validasidata = r.paramno;
-		end loop;
-	begin
-		validasidatatime = (SELECT setval('standar_tnis_seq', (select last_value+'1'::bigint from standar_tnis_seq), true));
-	end;
-    return validasidata;
-END;
-
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION f_standar_tns_seq(character varying)
-  OWNER TO postgres;
-
-
--- Function: f_insert_profile_zone(json)
-
--- DROP FUNCTION f_insert_profile_zone(json);
-
-CREATE OR REPLACE FUNCTION f_insert_profile(dataparam json)
-  RETURNS character AS
-$BODY$
-declare
-validasidata 	  character varying;
-val0         character varying;
-val1         character varying;
-val2  character varying;
-val3 character varying;
-r record;
-BEGIN
-		val1 = '';
-		val2 = '';
-		val3 = '';
-		val0 = '';
-		
-		for r in	
-					select 
-					(obj ->> 'schema')::character varying as schema,
-					(obj ->> 'groupid')::character varying as groupid,
-					(obj ->> 'name')::character varying as name,
-					(obj ->> 'password')::character varying as password,
-					(select count(*) from profile where name = (obj ->> 'name')::character varying  and password = (obj ->> 'password')::character varying) as count
-					from json_array_elements(dataparam -> 'data') obj 
-
-		loop
-			begin
-				val1          = r.groupid;
-				val2          = r.name;
-				val3 = r.password;
-				if r.count > 0 then			        
-				   validasidata = 'update';
-				else				
-				   validasidata = 'insert';	
-				   val0          = (select f_standar_tnis_seq::character varying as nomorsequance from f_standar_tnis_seq('PROF'));			     
-			        end if;
-			end;
-    end loop;
-
-      begin
-	      if validasidata = 'update' then
-		  UPDATE profile    SET groupid=val1, name=val2, password=val3   where userid = val0;
-	      else
-		  INSERT INTO profile(userid, groupid, name, password) VALUES (val0, val1, val2, val3);
-				   
-	      end if;
-       end;  
-    
-    return validasidata;
-END;
-
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION f_insert_profile(json)
-  OWNER TO postgres;
 
 
 ALTER TABLE cuti  ADD COLUMN status character varying(255);
@@ -363,4 +282,90 @@ ALTER FUNCTION f_insert_cuti(json)
 
 
 
+
+CREATE OR REPLACE FUNCTION f_insert_profile(dataparam json)
+  RETURNS character AS
+$BODY$
+declare
+validasidata 	  character varying;
+val0         character varying;
+val1         character varying;
+val2  character varying;
+val3 character varying;
+r record;
+BEGIN
+		val1 = '';
+		val2 = '';
+		val3 = '';
+		val0 = '';
+		
+		for r in	
+					select 
+					(obj ->> 'schema')::character varying as schema,
+					(obj ->> 'groupid')::numeric as groupid,
+					(obj ->> 'name')::character varying as name,
+					(obj ->> 'password')::character varying as password,
+					(select count(*) from profile where name = (obj ->> 'name')::character varying  and password = (obj ->> 'password')::character varying) as count
+					from json_array_elements(dataparam -> 'data') obj 
+
+		loop
+			begin
+				val1          = r.groupid;
+				val2          = r.name;
+				val3 = r.password;
+				if r.count > 0 then			        
+				   validasidata = 'update';
+				else				
+				   validasidata = 'insert';	
+				   val0          = (select f_standar_tnis_seq::character varying as nomorsequance from f_standar_tnis_seq('PROF'));			     
+			        end if;
+			end;
+    end loop;
+
+      begin
+	      if validasidata = 'update' then
+		  UPDATE profile    SET groupid=val1, name=val2, password=val3   where userid = val0;
+	      else
+		  INSERT INTO profile(profileno, groupid, name, password) VALUES (val0, val1::numeric, val2, val3);
+				   
+	      end if;
+       end;  
+    
+    return validasidata;
+END;
+
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION f_insert_profile(json)
+  OWNER TO postgres;
+
+
+CREATE OR REPLACE FUNCTION f_standar_tnis_seq(dataparam character varying)
+  RETURNS character AS
+$BODY$
+declare
+validasidata 	  character varying;
+validasidatatime 	  character varying;
+r record;
+BEGIN
+		
+		for r in	
+				select 
+				(dataparam || to_char(now()::date,'yy') || to_char(now()::date,'mm') || to_char(now()::date,'dd') || last_value) as paramno					
+				from standar_tnis_seq
+		loop
+				validasidata = r.paramno;
+		end loop;
+	begin
+		validasidatatime = (SELECT setval('standar_tnis_seq', (select last_value+'1'::bigint from standar_tnis_seq), true));
+	end;
+    return validasidata;
+END;
+
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION f_standar_tnis_seq(character varying)
+  OWNER TO postgres;
 
