@@ -99,7 +99,7 @@ COMMENT ON TABLE tblassignment
 
 CREATE TABLE cuti
 (
-  cutiid bigint NOT NULL,
+  cutiid bigint NOT NULL DEFAULT nextval('tblcuti_seq'::regclass),
   keperluan character varying(255) DEFAULT NULL::character varying,
   datefrom character varying(255) DEFAULT NULL::character varying,
   dateto character varying(255) DEFAULT NULL::character varying,
@@ -223,6 +223,7 @@ ALTER TABLE cuti  ADD COLUMN status character varying(255);
 ALTER TABLE cuti  ADD COLUMN cutino character varying(255);
 
 
+
 CREATE OR REPLACE FUNCTION f_insert_cuti(dataparam json)
   RETURNS character AS
 $BODY$
@@ -234,7 +235,7 @@ val2  character varying;
 val3 character varying;
 val4 character varying;
 val5 character varying;
-
+val6 character varying;
 r record;
 BEGIN
 		val0 = '';
@@ -243,15 +244,17 @@ BEGIN
 		val3 = '';
 		val4 = '';
 		val5 = '';
-		
+		val6 ='';
 		for r in	
 					select 
-					(obj ->> 'schema')::character varying as schema,
-					(obj ->> 'keperluan')::character varying as groupid,
-					(obj ->> 'datefrom')::character varying as name,
-					(obj ->> 'dateto')::character varying as password,
+					(obj ->> 'validasi')::character varying as validasi,
+					(obj ->> 'keperluan')::character varying as keperluan,
+					(obj ->> 'datefrom')::character varying as datefrom,
+					(obj ->> 'dateto')::character varying as dateto,
 					(obj ->> 'description')::character varying as description,
-					(obj ->> 'status')::character varying as status
+					(obj ->> 'status')::character varying as status,
+					(obj ->> 'userid')::character varying as userid,
+					(select count(*) from cuti where datefrom = (obj ->> 'datefrom')::character varying  and dateto = (obj ->> 'dateto')::character varying) as count
 					from json_array_elements(dataparam -> 'data') obj 
 
 		loop
@@ -260,15 +263,28 @@ BEGIN
 				val2          = r.datefrom;
 				val3          = r.dateto;		
 				val4          = r.description;	
-				val5          = r.status;							
-				validasidata = 'insert';	
-				val0          = (select f_standar_tnis_seq::character varying as nomorsequance from f_standar_tnis_seq('CUTI'));
+				val5          = r.status;	
+				val6          = r.userid;	
+				if r.validasi = 'new' then	
+				        if r.count > 0 then	
+						validasidata = 'update';
+						val6 = (select cutiid from cuti where datefrom = val2::character varying and dateto = val3::character varying limit 1);
+					else
+						validasidata = 'insert';
+						val0          = (select f_standar_tnis_seq::character varying as nomorsequance from f_standar_tnis_seq('CUTI'));			     
+					end if;
+				else
+					validasidata = 'update';	
+				end if;
 			end;
     end loop;
 
       begin
-		  INSERT INTO cuti(cutino, keperluan, datefrom, dateto, description,status)VALUES (val0, val1, val2, val3, val4,val5);
-
+	      if validasidata = 'update' then
+		  UPDATE cuti   SET keperluan=val1, datefrom=val2, dateto=val3, description=val4, status=val5 WHERE cutiid = val6::numeric;
+	      else
+		  INSERT INTO cuti(cutino, keperluan, datefrom, dateto, description,status)VALUES (val0, val1, val2, val3, val4,val5);   
+	      end if;
        end;  
     
     return validasidata;
@@ -283,6 +299,8 @@ ALTER FUNCTION f_insert_cuti(json)
 
 
 
+
+
 CREATE OR REPLACE FUNCTION f_insert_profile(dataparam json)
   RETURNS character AS
 $BODY$
@@ -292,19 +310,21 @@ val0         character varying;
 val1         character varying;
 val2  character varying;
 val3 character varying;
+val4 character varying;
 r record;
 BEGIN
 		val1 = '';
 		val2 = '';
 		val3 = '';
 		val0 = '';
-		
+		val4 = '';
 		for r in	
 					select 
-					(obj ->> 'schema')::character varying as schema,
+					(obj ->> 'validasi')::character varying as validasi,
 					(obj ->> 'groupid')::numeric as groupid,
 					(obj ->> 'name')::character varying as name,
 					(obj ->> 'password')::character varying as password,
+					(obj ->> 'userid')::character varying as userid,
 					(select count(*) from profile where name = (obj ->> 'name')::character varying  and password = (obj ->> 'password')::character varying) as count
 					from json_array_elements(dataparam -> 'data') obj 
 
@@ -313,21 +333,26 @@ BEGIN
 				val1          = r.groupid;
 				val2          = r.name;
 				val3 = r.password;
-				if r.count > 0 then			        
-				   validasidata = 'update';
-				else				
-				   validasidata = 'insert';	
-				   val0          = (select f_standar_tnis_seq::character varying as nomorsequance from f_standar_tnis_seq('PROF'));			     
-			        end if;
+				val4  = r.userid;	
+				if r.validasi = 'new' then	
+						if r.count > 0 then									
+						   validasidata = 'update';
+						   val4 = (select userid from profile where name = val2::character varying and password = val3::character varying limit 1);
+						else				
+						   validasidata = 'insert';	
+						   val0          = (select f_standar_tnis_seq::character varying as nomorsequance from f_standar_tnis_seq('PROF'));			     
+						end if;
+				else
+					validasidata = 'update';
+				end if;
 			end;
     end loop;
 
       begin
 	      if validasidata = 'update' then
-		  UPDATE profile    SET groupid=val1, name=val2, password=val3   where userid = val0;
+		  UPDATE profile    SET groupid=val1::numeric, name=val2, password=val3   where userid::numeric = val4::numeric;
 	      else
-		  INSERT INTO profile(profileno, groupid, name, password) VALUES (val0, val1::numeric, val2, val3);
-				   
+		  INSERT INTO profile(profileno, groupid, name, password) VALUES (val0, val1::numeric, val2, val3);				   
 	      end if;
        end;  
     

@@ -6,6 +6,7 @@
 package com.interview.teknologi.indonesia.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.interview.teknologi.indonesia.model.cuti;
 import com.interview.teknologi.indonesia.model.profile;
 import com.interview.teknologi.indonesia.model.tblassignment;
 import com.interview.teknologi.indonesia.services.servicesMapper;
@@ -17,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -71,7 +74,10 @@ public class controllerCuti {
         return "profil";
     }
     @RequestMapping("/cuti")
-    public String cuti(){
+    public String cuti(Model model){
+        cuti cut = new cuti(); 
+        model.addAttribute("command",cut);
+        model.addAttribute("listall",mapper.getAllDataCuti());
         return "cuti";
     }
     @RequestMapping("/assignment")
@@ -100,12 +106,62 @@ public class controllerCuti {
             if(prof.getName()!=null)
                 model.addAttribute("validasiedit","edit");        
         model.addAttribute("listallprofilegroup",mapper.getAllDataProfileGroupDroupDown());     
-        String profileJson ="{ \"data\" : [{\"schema\" : \"tnis\", \"groupid\" : \""+prof.getGroupid()+"\",\"name\" : \""+prof.getName()+"\",\"password\": \""+prof.getPassword()+"\"}]}";
+        String profileJson ="{ \"data\" : [{\"validasi\" : \"new\", \"groupid\" : \""+prof.getGroupid()+"\",\"name\" : \""+prof.getName()+"\",\"password\": \""+prof.getPassword()+"\"}]}";
         prof.setValuedata(profileJson);
         
         mapper.insertDataProfil(prof);
         
          return "profil";
 //      return "redirect:/karyawan/profil";
+    }
+    @PostMapping("/addCuti")
+    public String addCuti(@ModelAttribute("command") cuti command,Model model ) {
+        cuti cut = new cuti();     
+        cut.setKeperluan(command.getKeperluan());
+        cut.setDatefrom(command.getDatefrom());
+        cut.setDateto(command.getDateto());
+        cut.setDescription(command.getDescription());
+        cut.setStatus(command.getStatus());
+        model.addAttribute("command",cut);
+        if(cut != null)
+           model.addAttribute("validasiedit","edit");        
+        model.addAttribute("listallprofilegroup",mapper.getAllDataProfileGroupDroupDown());     
+        String profileJson ="{ \"data\" : [{\"validasi\" : \"new\", \"keperluan\" : \""+cut.getKeperluan()+"\",\"datefrom\" : \""+cut.getDatefrom()+"\",\"dateto\": \""+cut.getDateto()+"\",\"description\": \""+cut.getDescription()+"\",\"status\":\""+cut.getStatus()+"\"}]}";
+        cut.setValuedata(profileJson);
+        
+        mapper.insertDataCuti(cut);
+        
+         return "cuti";
+    }
+    @GetMapping("/editCuti/{cutiid}")
+    public String editCuti(@PathVariable("cutiid") long cutiid, Model model) {
+        cuti cut = mapper.editDataCuti(cutiid);
+        model.addAttribute("command",cut);
+    return "editCuti";
+    }
+     @GetMapping("/deletedCuti/{cutiid}")
+    public String deletedCuti(@PathVariable("cutiid") long cutiid, Model model) {
+        mapper.deletedDataCuti(cutiid);
+    return "redirect:/karyawan/cuti";
+    }
+    @PostMapping("/addCutiProcess")
+    public String addCutiProcess(@ModelAttribute("command") cuti command,Model model ) {
+        cuti cut = new cuti();     
+        cut.setKeperluan(command.getKeperluan());
+        cut.setDatefrom(command.getDatefrom());
+        cut.setDateto(command.getDateto());
+        cut.setDescription(command.getDescription());
+        cut.setStatus(command.getStatus());
+        cut.setCutiid(command.getCutiid());
+        model.addAttribute("command",cut);
+        if(cut != null)
+           model.addAttribute("validasiedit","edit");        
+        model.addAttribute("listallprofilegroup",mapper.getAllDataProfileGroupDroupDown());     
+        String profileJson ="{ \"data\" : [{\"validasi\" : \"new\", \"keperluan\" : \""+cut.getKeperluan()+"\",\"datefrom\" : \""+cut.getDatefrom()+"\",\"dateto\": \""+cut.getDateto()+"\",\"description\": \""+cut.getDescription()+"\",\"status\":\""+cut.getStatus()+"\",\"cutiid\": \""+cut.getCutiid()+"\"}]}";
+        cut.setValuedata(profileJson);
+        
+        mapper.insertDataCuti(cut);
+        
+         return "editCuti";
     }
  }

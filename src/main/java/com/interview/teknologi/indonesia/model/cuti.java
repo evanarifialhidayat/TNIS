@@ -26,5 +26,6 @@ public class cuti {
     public String description;
     public String status ;
     public String cutino ;
+    public String valuedata;
     public cuti(){}
 }
