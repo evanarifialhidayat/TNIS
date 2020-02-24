@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
 
 <head>
 
@@ -164,13 +165,19 @@ body{
 		</div>
 		<br>
 		<div class="login">
-				<input type="text" placeholder="username" name="user"><br>
-				<input type="password" placeholder="password" name="password"><br>
-                                <input type="button" id="login" onclick="location.href='/karyawan/dasboard'"  value="Login">
+                     <form  th:action="@{/karyawan/dasboard}" id="fromid"  th:object="${command}"  method="post">
+				<input type="text" placeholder="username" name="name"  ><br>
+				<input type="password" placeholder="password" name="password"   ><br>
+                                <input type="button" id="login"  onclick="submitdata(); return false;" value="Login">
+                     </form>
 		</div>
 
   <script src='http://codepen.io/assets/libs/fullpage/jquery.js'></script>
-  
+    <script th:inline="javascript">    
+        function submitdata (){
+          document.getElementById("fromid").submit();
+        }
+    </script>
 </body>
 
 </html>

@@ -27,5 +27,6 @@ public class cuti {
     public String status ;
     public String cutino ;
     public String valuedata;
+     public Long userid;
     public cuti(){}
 }

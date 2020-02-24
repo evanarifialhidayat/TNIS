@@ -21,7 +21,7 @@ public class profile {
     public String schema;
     public String profileno;
     public Long groupid;
-    public String tnisvalidasi;    
+    public Integer tnisvalidasi;    
     public String name; 
     public String password;
     public String valuedata;

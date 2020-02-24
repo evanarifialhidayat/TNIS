@@ -40,7 +40,8 @@ val2  character varying;
 val3 character varying;
 val4 character varying;
 val5 character varying;
-
+val6 character varying;
+val7 character varying;
 r record;
 BEGIN
 		val0 = '';
@@ -49,15 +50,19 @@ BEGIN
 		val3 = '';
 		val4 = '';
 		val5 = '';
-		
+		val6 ='';
+		val7 ='';
 		for r in	
 					select 
-					(obj ->> 'schema')::character varying as schema,
-					(obj ->> 'keperluan')::character varying as groupid,
-					(obj ->> 'datefrom')::character varying as name,
-					(obj ->> 'dateto')::character varying as password,
+					(obj ->> 'validasi')::character varying as validasi,
+					(obj ->> 'keperluan')::character varying as keperluan,
+					(obj ->> 'datefrom')::character varying as datefrom,
+					(obj ->> 'dateto')::character varying as dateto,
 					(obj ->> 'description')::character varying as description,
-					(obj ->> 'status')::character varying as status
+					(obj ->> 'status')::character varying as status,
+					(obj ->> 'cutiid')::character varying as cutiid,
+					(obj ->> 'userid')::character varying as userid,
+					(select count(*) from cuti where datefrom = (obj ->> 'datefrom')::character varying  and dateto = (obj ->> 'dateto')::character varying) as count
 					from json_array_elements(dataparam -> 'data') obj 
 
 		loop
@@ -66,15 +71,29 @@ BEGIN
 				val2          = r.datefrom;
 				val3          = r.dateto;		
 				val4          = r.description;	
-				val5          = r.status;							
-				validasidata = 'insert';	
-				val0          = (select f_standar_tnis_seq::character varying as nomorsequance from f_standar_tnis_seq('CUTI'));
+				val5          = r.status;	
+				val6          = r.cutiid;
+				val7	      = r.userid;
+				if r.validasi = 'new' then	
+				        if r.count > 0 then	
+						validasidata = 'update';
+						val6 = (select cutiid from cuti where datefrom = val2::character varying and dateto = val3::character varying limit 1);
+					else
+						validasidata = 'insert';
+						val0          = (select f_standar_tnis_seq::character varying as nomorsequance from f_standar_tnis_seq('CUTI'));			     
+					end if;
+				else
+					validasidata = 'update';	
+				end if;
 			end;
     end loop;
 
       begin
-		  INSERT INTO cuti(cutino, keperluan, datefrom, dateto, description,status)VALUES (val0, val1, val2, val3, val4,val5);
-
+	      if validasidata = 'update' then
+		  UPDATE cuti   SET keperluan=val1, datefrom=val2, dateto=val3, description=val4, status=val5 WHERE cutiid = val6::numeric;
+	      else
+		  INSERT INTO cuti(cutino, keperluan, datefrom, dateto, description,status,userid)VALUES (val0, val1, val2, val3, val4,val5,val7::numeric);   
+	      end if;
        end;  
     
     return validasidata;
@@ -98,19 +117,21 @@ val0         character varying;
 val1         character varying;
 val2  character varying;
 val3 character varying;
+val4 character varying;
 r record;
 BEGIN
 		val1 = '';
 		val2 = '';
 		val3 = '';
 		val0 = '';
-		
+		val4 = '';
 		for r in	
 					select 
-					(obj ->> 'schema')::character varying as schema,
+					(obj ->> 'validasi')::character varying as validasi,
 					(obj ->> 'groupid')::numeric as groupid,
 					(obj ->> 'name')::character varying as name,
 					(obj ->> 'password')::character varying as password,
+					(obj ->> 'userid')::character varying as userid,
 					(select count(*) from profile where name = (obj ->> 'name')::character varying  and password = (obj ->> 'password')::character varying) as count
 					from json_array_elements(dataparam -> 'data') obj 
 
@@ -119,21 +140,26 @@ BEGIN
 				val1          = r.groupid;
 				val2          = r.name;
 				val3 = r.password;
-				if r.count > 0 then			        
-				   validasidata = 'update';
-				else				
-				   validasidata = 'insert';	
-				   val0          = (select f_standar_tnis_seq::character varying as nomorsequance from f_standar_tnis_seq('PROF'));			     
-			        end if;
+				val4  = r.userid;	
+				if r.validasi = 'new' then	
+						if r.count > 0 then									
+						   validasidata = 'update';
+						   val4 = (select userid from profile where name = val2::character varying and password = val3::character varying limit 1);
+						else				
+						   validasidata = 'insert';	
+						   val0          = (select f_standar_tnis_seq::character varying as nomorsequance from f_standar_tnis_seq('PROF'));			     
+						end if;
+				else
+					validasidata = 'update';
+				end if;
 			end;
     end loop;
 
       begin
 	      if validasidata = 'update' then
-		  UPDATE profile    SET groupid=val1, name=val2, password=val3   where userid = val0;
+		  UPDATE profile    SET groupid=val1::numeric, name=val2, password=val3   where userid::numeric = val4::numeric;
 	      else
-		  INSERT INTO profile(profileno, groupid, name, password) VALUES (val0, val1::numeric, val2, val3);
-				   
+		  INSERT INTO profile(profileno, groupid, name, password) VALUES (val0, val1::numeric, val2, val3);				   
 	      end if;
        end;  
     
@@ -199,14 +225,15 @@ SET default_with_oids = false;
 --
 
 CREATE TABLE cuti (
-    cutiid bigint NOT NULL,
+    cutiid bigint DEFAULT nextval('tblcuti_seq'::regclass) NOT NULL,
     keperluan character varying(255) DEFAULT NULL::character varying,
     datefrom character varying(255) DEFAULT NULL::character varying,
     dateto character varying(255) DEFAULT NULL::character varying,
     description text,
     deleted bigint DEFAULT 0,
     status character varying(255),
-    cutino character varying(255) DEFAULT nextval('tblcuti_seq'::regclass)
+    cutino character varying(255) DEFAULT nextval('tblcuti_seq'::regclass),
+    userid bigint
 );
 
 
@@ -243,6 +270,36 @@ CREATE TABLE profile (
 
 
 ALTER TABLE public.profile OWNER TO tnis;
+
+--
+-- Name: spring_session; Type: TABLE; Schema: public; Owner: tnis; Tablespace: 
+--
+
+CREATE TABLE spring_session (
+    primary_id character(36) NOT NULL,
+    session_id character(36) NOT NULL,
+    creation_time bigint NOT NULL,
+    last_access_time bigint NOT NULL,
+    max_inactive_interval integer NOT NULL,
+    expiry_time bigint NOT NULL,
+    principal_name character varying(100)
+);
+
+
+ALTER TABLE public.spring_session OWNER TO tnis;
+
+--
+-- Name: spring_session_attributes; Type: TABLE; Schema: public; Owner: tnis; Tablespace: 
+--
+
+CREATE TABLE spring_session_attributes (
+    session_primary_id character(36) NOT NULL,
+    attribute_name character varying(200) NOT NULL,
+    attribute_bytes bytea NOT NULL
+);
+
+
+ALTER TABLE public.spring_session_attributes OWNER TO tnis;
 
 --
 -- Name: standar_tnis_seq; Type: SEQUENCE; Schema: public; Owner: tnis
@@ -387,7 +444,9 @@ ALTER TABLE public.tblpermissions OWNER TO tnis;
 -- Data for Name: cuti; Type: TABLE DATA; Schema: public; Owner: tnis
 --
 
-COPY cuti (cutiid, keperluan, datefrom, dateto, description, deleted, status, cutino) FROM stdin;
+COPY cuti (cutiid, keperluan, datefrom, dateto, description, deleted, status, cutino, userid) FROM stdin;
+6	melahirkan	2020-02-12	2020-02-14	testing	0	Belum Di Setujui	CUTI20022412	5
+1	sakit hati	2020-02-12	2020-02-26	xxxxxxxxxx	0	Belum Di Setujui	CUTI2002235	3
 \.
 
 
@@ -396,7 +455,27 @@ COPY cuti (cutiid, keperluan, datefrom, dateto, description, deleted, status, cu
 --
 
 COPY profile (userid, groupid, name, password, tnisvalidasi, schema, deleted, profileno) FROM stdin;
-3	3	evan arifial hidayat		0	\N	0	PROF2002223
+5	4	tnis	tnis	0	\N	0	PROF2002239
+3	3	root	root001	1	\N	0	PROF2002223
+\.
+
+
+--
+-- Data for Name: spring_session; Type: TABLE DATA; Schema: public; Owner: tnis
+--
+
+COPY spring_session (primary_id, session_id, creation_time, last_access_time, max_inactive_interval, expiry_time, principal_name) FROM stdin;
+d17ae5f2-86c4-4358-b48b-5759dcb83b77	1479c012-6162-485c-a914-1e4837943781	1582534414448	1582536982421	1800	1582538782421	\N
+\.
+
+
+--
+-- Data for Name: spring_session_attributes; Type: TABLE DATA; Schema: public; Owner: tnis
+--
+
+COPY spring_session_attributes (session_primary_id, attribute_name, attribute_bytes) FROM stdin;
+d17ae5f2-86c4-4358-b48b-5759dcb83b77	userid	\\xaced00057372000e6a6176612e6c616e672e4c6f6e673b8be490cc8f23df0200014a000576616c7565787200106a6176612e6c616e672e4e756d62657286ac951d0b94e08b02000078700000000000000003
+d17ae5f2-86c4-4358-b48b-5759dcb83b77	loginsuper	\\xaced000574000a6c6f67696e7375706572
 \.
 
 
@@ -404,7 +483,7 @@ COPY profile (userid, groupid, name, password, tnisvalidasi, schema, deleted, pr
 -- Name: standar_tnis_seq; Type: SEQUENCE SET; Schema: public; Owner: tnis
 --
 
-SELECT pg_catalog.setval('standar_tnis_seq', 4, true);
+SELECT pg_catalog.setval('standar_tnis_seq', 15, true);
 
 
 --
@@ -428,7 +507,7 @@ SELECT pg_catalog.setval('tblassignment_assignmentid_seq', 4, true);
 -- Name: tblcuti_seq; Type: SEQUENCE SET; Schema: public; Owner: tnis
 --
 
-SELECT pg_catalog.setval('tblcuti_seq', 1, false);
+SELECT pg_catalog.setval('tblcuti_seq', 6, true);
 
 
 --
@@ -497,7 +576,7 @@ COPY tblpermissions (permissionid, assignmentid, moduleid, pread) FROM stdin;
 -- Name: tblprofile_seq; Type: SEQUENCE SET; Schema: public; Owner: tnis
 --
 
-SELECT pg_catalog.setval('tblprofile_seq', 3, true);
+SELECT pg_catalog.setval('tblprofile_seq', 7, true);
 
 
 --
@@ -506,6 +585,22 @@ SELECT pg_catalog.setval('tblprofile_seq', 3, true);
 
 ALTER TABLE ONLY profile
     ADD CONSTRAINT profile_pkey PRIMARY KEY (userid);
+
+
+--
+-- Name: spring_session_attributes_pk; Type: CONSTRAINT; Schema: public; Owner: tnis; Tablespace: 
+--
+
+ALTER TABLE ONLY spring_session_attributes
+    ADD CONSTRAINT spring_session_attributes_pk PRIMARY KEY (session_primary_id, attribute_name);
+
+
+--
+-- Name: spring_session_pk; Type: CONSTRAINT; Schema: public; Owner: tnis; Tablespace: 
+--
+
+ALTER TABLE ONLY spring_session
+    ADD CONSTRAINT spring_session_pk PRIMARY KEY (primary_id);
 
 
 --
@@ -549,11 +644,40 @@ ALTER TABLE ONLY tblpermissions
 
 
 --
+-- Name: spring_session_ix1; Type: INDEX; Schema: public; Owner: tnis; Tablespace: 
+--
+
+CREATE UNIQUE INDEX spring_session_ix1 ON spring_session USING btree (session_id);
+
+
+--
+-- Name: spring_session_ix2; Type: INDEX; Schema: public; Owner: tnis; Tablespace: 
+--
+
+CREATE INDEX spring_session_ix2 ON spring_session USING btree (expiry_time);
+
+
+--
+-- Name: spring_session_ix3; Type: INDEX; Schema: public; Owner: tnis; Tablespace: 
+--
+
+CREATE INDEX spring_session_ix3 ON spring_session USING btree (principal_name);
+
+
+--
 -- Name: profile_groupid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tnis
 --
 
 ALTER TABLE ONLY profile
     ADD CONSTRAINT profile_groupid_fkey FOREIGN KEY (groupid) REFERENCES tblgroup(groupid);
+
+
+--
+-- Name: spring_session_attributes_fk; Type: FK CONSTRAINT; Schema: public; Owner: tnis
+--
+
+ALTER TABLE ONLY spring_session_attributes
+    ADD CONSTRAINT spring_session_attributes_fk FOREIGN KEY (session_primary_id) REFERENCES spring_session(primary_id) ON DELETE CASCADE;
 
 
 --

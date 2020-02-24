@@ -106,6 +106,7 @@ CREATE TABLE cuti
   description text,
   deleted bigint DEFAULT 0,
   status character varying(255),
+  userid bigint,
   cutino character varying(255) DEFAULT nextval('tblcuti_seq'::regclass),
   PRIMARY KEY (cutiid)
 )
@@ -224,6 +225,7 @@ ALTER TABLE cuti  ADD COLUMN cutino character varying(255);
 
 
 
+
 CREATE OR REPLACE FUNCTION f_insert_cuti(dataparam json)
   RETURNS character AS
 $BODY$
@@ -236,6 +238,7 @@ val3 character varying;
 val4 character varying;
 val5 character varying;
 val6 character varying;
+val7 character varying;
 r record;
 BEGIN
 		val0 = '';
@@ -245,6 +248,7 @@ BEGIN
 		val4 = '';
 		val5 = '';
 		val6 ='';
+		val7 ='';
 		for r in	
 					select 
 					(obj ->> 'validasi')::character varying as validasi,
@@ -253,6 +257,7 @@ BEGIN
 					(obj ->> 'dateto')::character varying as dateto,
 					(obj ->> 'description')::character varying as description,
 					(obj ->> 'status')::character varying as status,
+					(obj ->> 'cutiid')::character varying as cutiid,
 					(obj ->> 'userid')::character varying as userid,
 					(select count(*) from cuti where datefrom = (obj ->> 'datefrom')::character varying  and dateto = (obj ->> 'dateto')::character varying) as count
 					from json_array_elements(dataparam -> 'data') obj 
@@ -264,7 +269,8 @@ BEGIN
 				val3          = r.dateto;		
 				val4          = r.description;	
 				val5          = r.status;	
-				val6          = r.userid;	
+				val6          = r.cutiid;
+				val7	      = r.userid;
 				if r.validasi = 'new' then	
 				        if r.count > 0 then	
 						validasidata = 'update';
@@ -283,7 +289,7 @@ BEGIN
 	      if validasidata = 'update' then
 		  UPDATE cuti   SET keperluan=val1, datefrom=val2, dateto=val3, description=val4, status=val5 WHERE cutiid = val6::numeric;
 	      else
-		  INSERT INTO cuti(cutino, keperluan, datefrom, dateto, description,status)VALUES (val0, val1, val2, val3, val4,val5);   
+		  INSERT INTO cuti(cutino, keperluan, datefrom, dateto, description,status,userid)VALUES (val0, val1, val2, val3, val4,val5,val7::numeric);   
 	      end if;
        end;  
     
@@ -295,6 +301,7 @@ $BODY$
   COST 100;
 ALTER FUNCTION f_insert_cuti(json)
   OWNER TO postgres;
+
 
 
 

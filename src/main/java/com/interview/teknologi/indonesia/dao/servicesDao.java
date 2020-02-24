@@ -5,6 +5,7 @@
  */
 package com.interview.teknologi.indonesia.dao;
 
+import com.interview.teknologi.indonesia.model.cuti;
 import com.interview.teknologi.indonesia.model.profile;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,4 +49,29 @@ public class servicesDao{
                     return userList;
         }
     }
+    
+     public List<cuti> getCutiListNow() {
+        List<cuti> cutiList = mapperservices.getAllDataCutiDefaultNow();
+        if(cutiList.size() > 0)
+                    return cutiList;
+        else{
+                    cuti cut = new cuti();
+                    cutiList = new ArrayList();
+                    cutiList.add(cut);
+                    return cutiList;
+        }
+    }
+     
+       public List<cuti> getCutiListFilter(long cutiid) {
+        List<cuti> cutiList = mapperservices.getAllDataCutiDefaultFilter(cutiid);
+        if(cutiList.size() > 0)
+                    return cutiList;
+        else{
+                    cuti cut = new cuti();
+                    cutiList = new ArrayList();
+                    cutiList.add(cut);
+                    return cutiList;
+        }
+    }
+    
 }

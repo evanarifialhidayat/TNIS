@@ -27,6 +27,11 @@ public interface servicesMapper {
             + " b.name, b.password, b.profileno  FROM profile b where deleted=0")
     public List<profile> getAllDataProfile();
     
+     @Select("SELECT b.userid, "
+            + "(select a.name from tblgroup a where a.groupid = b.groupid limit 1) as namegroupid,"
+            + " b.name, b.password, b.profileno  FROM profile b where deleted=0 and userid = ${userid}")
+    public List<profile> getAllDataProfileUserid(long userid);
+    
     @Select("SELECT * FROM tblassignment where deleted=0 ")
     public List<tblassignment> getAllDataAssigmentMapper();    
     
@@ -45,9 +50,23 @@ public interface servicesMapper {
     @Select("SELECT f_insert_profile::character varying as valueall FROM f_insert_profile(#{param.valuedata}::json) ")
     public profile insertDataProfil(@Param("param") profile valuedata); 
     
+    @Select("SELECT * FROM profile where deleted=0 and userid = ${param.userid} ")
+    public profile editDataProfil(@Param("param") profile a); 
+    
     
     @Select("SELECT * FROM cuti where deleted=0 ")
     public List<cuti> getAllDataCuti(); 
+    
+    //api
+    @Select(" SELECT  keperluan, datefrom, dateto, description, status,  cutino, userid FROM cuti where deleted=0  and    to_char(datefrom::date,'mm')  = to_char(now()::date,'mm') ")
+    public List<cuti> getAllDataCutiDefaultNow(); 
+    
+    //api
+    @Select(" SELECT  keperluan, datefrom, dateto, description, status,  cutino, userid FROM cuti where deleted=0 and    to_char(datefrom::date,'mm')::numeric  = ${userid}")
+    public List<cuti> getAllDataCutiDefaultFilter(long userid); 
+    
+    @Select("SELECT * FROM cuti where deleted=0 and userid = ${userid}")
+    public List<cuti> getAllDataCutiUserId(long userid); 
     
     @Select("SELECT f_insert_cuti::character varying as valueall FROM f_insert_cuti(#{param.valuedata}::json) ")
     public cuti insertDataCuti(@Param("param") cuti valuedata); 
@@ -57,4 +76,7 @@ public interface servicesMapper {
      
      @Select("SELECT * FROM cuti where deleted=0 and cutiid= #{cutiid}")
      public cuti editDataCuti(long cutiid);
+     
+     @Select("SELECT * FROM profile where deleted=0 and name= #{param.name} and password = #{param.password}")
+     public profile getDataLogin(@Param("param") profile a);
 }

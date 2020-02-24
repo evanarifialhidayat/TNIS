@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.interview.teknologi.indonesia.services.servicesMapper;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.View;
 /**
  *
@@ -36,6 +37,22 @@ public class apiController {
     public ResponseEntity<?> getUserListAll(){
         HashMap<String, Object> result = new HashMap<>();
         result.put("profile", servicesdao.getUserList());
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+    
+    
+    @RequestMapping(value="/allcuti/{cutiid}", method=RequestMethod.GET)
+    public ResponseEntity<?> getCutiListFilter(@PathVariable("cutiid") long cutiid){
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("cuti", servicesdao.getCutiListFilter(cutiid));
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+    
+    @RequestMapping(value="/allcuti", method=RequestMethod.GET)
+    public ResponseEntity<?> getCutiListAllNow(){
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("cuti",servicesdao.getCutiListNow());
+        
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
     

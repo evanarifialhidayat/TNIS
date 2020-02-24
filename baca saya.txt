@@ -25,7 +25,11 @@ psql -d tnis -h localhost  -p 5432 -U tnis -f D:\tnis_cuti.sql
 - user hanya terdapat 2 menu yaitu Cuti dan Profile
 - di menu Cuti user hanya bisa mengajukan cuti dan nunggu persetujuan dari admin
 - di menu profile user hanya bisa edit tidak bisa melihat keseluruhan list user 
-
+3. terdapat 2 API 
+- getAll data cuti default adalah bulan sekarang dengan url 
+    http://localhost:8080/karyawan/api/allcuti
+- get search by bulan (dalam huruf numeric contoh : 1,2,3,4,5,6,7,8,9,10,11,12)
+    http://localhost:8080/karyawan/api/allcuti/2
 =============================================================================
 PENGEMBANGAN
 1. sejauh ini dibuatkan data nya masih dari via DB . kedepan nya diharapkan bisa dynamic dilakukan langsung dari aplikasi . dan dilakukan oleh consultan / analis langsung.

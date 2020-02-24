@@ -29,25 +29,26 @@ and open the template in the editor.
           </form>
           <div class="nav-wrapper">
             <ul class="nav flex-column">
-              <li class="nav-item">
+                
+              <li class="nav-item" th:if="${user == 'loginsuper'}">
                 <a class="nav-link active" href="/karyawan/dasboard">
                   <i class="material-icons">view_module</i>
                   <span>Dasboard</span>
                 </a>
               </li>
-              <li class="nav-item">
+              <li class="nav-item" th:if="${user == 'loginsuper'}">
                 <a class="nav-link active" href="/karyawan/assignment">
                   <i class="material-icons">view_module</i>
                   <span>Assigment</span>
                 </a>
               </li>
-              <li class="nav-item">
+              <li class="nav-item" th:if="${user == 'loginsuper'}">
                 <a class="nav-link active" href="/karyawan/profilgroup">
                   <i class="material-icons">view_module</i>
                   <span>Profile Group</span>
                 </a>
               </li>
-              <li class="nav-item">
+              <li class="nav-item" th:if="${user == 'loginsuper'}">
                 <a class="nav-link active" href="/karyawan/module">
                   <i class="material-icons">view_module</i>
                   <span>Module</span>
